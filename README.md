@@ -46,7 +46,7 @@
 
 ## 🔥 The Problem
 
-Every year, **$3.1 trillion in unpaid invoices** paralyze businesses worldwide. Small and medium enterprises (SMEs) — especially in emerging markets — issue invoices to their buyers and then **wait 30, 60, even 90 days** for payment, while:
+Every year, **$3.1 trillion in unpaid invoices** paralyze businesses worldwide. Small and medium enterprises (SMEs) especially in emerging markets issue invoices to their buyers and then **wait 30, 60, even 90 days** for payment, while:
 
 - Payroll comes due every two weeks
 - Suppliers demand upfront cash
