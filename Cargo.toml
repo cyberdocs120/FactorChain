@@ -1,0 +1,17 @@
+[workspace]
+resolver = "2"
+members = [
+    "contracts/shared",
+    "contracts/invoice-registry",
+    "contracts/marketplace",
+    "contracts/escrow",
+    "contracts/liquidity-pool",
+    "contracts/oracle",
+]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+
+[workspace.dependencies]
+soroban-sdk = "22.0.0"

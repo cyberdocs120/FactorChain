@@ -1,0 +1,12 @@
+[package]
+name = "liquidity-pool"
+version.workspace = true
+edition.workspace = true
+
+[lib]
+crate-type = ["cdylib"]
+doctest = false
+
+[dependencies]
+soroban-sdk = { workspace = true }
+shared = { path = "../shared" }
