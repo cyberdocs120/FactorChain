@@ -1,0 +1,197 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum InvoiceStatus {
+  Draft
+  Listed
+  Funded
+  Settled
+  Defaulted
+}
+
+enum SaleMode {
+  DutchAuction
+  FixedRate
+}
+
+enum BidStatus {
+  Pending
+  Accepted
+  Rejected
+}
+
+enum EscrowStatus {
+  Active
+  Settled
+  Defaulted
+}
+
+enum UserRole {
+  Seller
+  Investor
+  Buyer
+  Admin
+}
+
+model User {
+  address   String   @id
+  role      UserRole
+  company   String?
+  email     String?
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  invoices           Invoice[]
+  buyerInvoices      Invoice[]       @relation("BuyerInvoices")
+  bids               Bid[]
+  escrows            Escrow[]        @relation("InvestorEscrows")
+  sellerEscrows      Escrow[]        @relation("SellerEscrows")
+  poolPositions      PoolPosition[]
+  webhooks           Webhook[]
+
+  @@map("users")
+}
+
+model Invoice {
+  id        String        @id @default(cuid())
+  invoiceId String?       @unique @map("invoice_id")
+  seller    String
+  buyer     String
+  faceValue Decimal       @map("face_value")
+  dueDate   DateTime      @map("due_date")
+  docHash   String?       @map("doc_hash")
+  ipfsUrl   String?       @map("ipfs_url")
+  status    InvoiceStatus @default(Draft)
+  createdAt DateTime      @default(now()) @map("created_at")
+  updatedAt DateTime      @updatedAt @map("updated_at")
+
+  sellerUser User       @relation(fields: [seller], references: [address])
+  buyerUser  User       @relation("BuyerInvoices", fields: [buyer], references: [address])
+  listing    Listing?
+  escrows    Escrow[]
+
+  @@index([seller])
+  @@index([buyer])
+  @@index([status])
+  @@map("invoices")
+}
+
+model Listing {
+  id              String   @id @default(cuid())
+  listingId       String?  @unique @map("listing_id")
+  invoiceId       String   @unique @map("invoice_id")
+  mode            SaleMode @map("sale_mode")
+  discountRateBps Int      @map("discount_rate_bps")
+  minFillPct      Int      @map("min_fill_pct")
+  deadline        DateTime
+  fundedPct       Int      @default(0) @map("funded_pct")
+  active          Boolean  @default(true)
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  invoice Invoice @relation(fields: [invoiceId], references: [id])
+  bids    Bid[]
+
+  @@index([active])
+  @@index([mode])
+  @@map("listings")
+}
+
+model Bid {
+  id        String   @id @default(cuid())
+  bidId     String?  @unique @map("bid_id")
+  listingId String   @map("listing_id")
+  investor  String
+  amount    Decimal
+  rateBps   Int      @map("rate_bps")
+  status    BidStatus @default(Pending)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  listing Listing @relation(fields: [listingId], references: [id])
+  user    User    @relation(fields: [investor], references: [address])
+
+  @@index([listingId])
+  @@index([investor])
+  @@map("bids")
+}
+
+model Escrow {
+  id          String       @id @default(cuid())
+  escrowId    String?      @unique @map("escrow_id")
+  invoiceId   String       @map("invoice_id")
+  investor    String
+  seller      String
+  amount      Decimal
+  dueDate     DateTime     @map("due_date")
+  status      EscrowStatus @default(Active)
+  createdAt   DateTime     @default(now()) @map("created_at")
+  settledAt   DateTime?    @map("settled_at")
+
+  invoice     Invoice      @relation(fields: [invoiceId], references: [id])
+  investorUser User        @relation("InvestorEscrows", fields: [investor], references: [address])
+  sellerUser  User         @relation("SellerEscrows", fields: [seller], references: [address])
+  settlement  Settlement?
+  default     Default?
+
+  @@index([investor])
+  @@index([seller])
+  @@index([status])
+  @@map("escrows")
+}
+
+model Settlement {
+  id        String   @id @default(cuid())
+  escrowId  String   @unique @map("escrow_id")
+  amount    Decimal
+  txHash    String?  @map("tx_hash")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  escrow Escrow @relation(fields: [escrowId], references: [id])
+
+  @@map("settlements")
+}
+
+model Default {
+  id        String   @id @default(cuid())
+  escrowId  String   @unique @map("escrow_id")
+  reason    String?
+  createdAt DateTime @default(now()) @map("created_at")
+
+  escrow Escrow @relation(fields: [escrowId], references: [id])
+
+  @@map("defaults")
+}
+
+model PoolPosition {
+  id         String   @id @default(cuid())
+  investor   String
+  amount     Decimal
+  shareAmount Decimal @map("share_amount")
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [investor], references: [address])
+
+  @@index([investor])
+  @@map("pool_positions")
+}
+
+model Webhook {
+  id        String   @id @default(cuid())
+  url       String
+  events    String[]
+  secret    String
+  userAddress String @map("user_address")
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userAddress], references: [address])
+
+  @@index([userAddress])
+  @@map("webhooks")
+}
