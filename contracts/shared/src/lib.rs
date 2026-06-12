@@ -1,6 +1,7 @@
 #![no_std]
 use soroban_sdk::{contracttype, Address, BytesN, Vec};
 
+#[derive(Clone)]
 #[contracttype]
 pub struct InvoiceState {
     pub seller: Address,
@@ -12,6 +13,7 @@ pub struct InvoiceState {
     pub created_at: u64,
 }
 
+#[derive(Clone)]
 #[contracttype]
 pub enum InvoiceStatus {
     Draft,
@@ -21,6 +23,7 @@ pub enum InvoiceStatus {
     Defaulted,
 }
 
+#[derive(Clone)]
 #[contracttype]
 pub struct Listing {
     pub invoice_id: BytesN<32>,
@@ -31,12 +34,14 @@ pub struct Listing {
     pub bids: Vec<Bid>,
 }
 
+#[derive(Clone)]
 #[contracttype]
 pub enum SaleMode {
     DutchAuction,
     FixedRate,
 }
 
+#[derive(Clone)]
 #[contracttype]
 pub struct Bid {
     pub investor: Address,
@@ -44,6 +49,7 @@ pub struct Bid {
     pub rate_bps: u32,
 }
 
+#[derive(Clone)]
 #[contracttype]
 pub struct PoolConfig {
     pub max_invoice_size: i128,

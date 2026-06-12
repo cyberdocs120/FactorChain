@@ -6,3 +6,4 @@ target/
 coverage/
 .DS_Store
 *.log
+PLAN.md
