@@ -210,3 +210,6 @@ impl MarketplaceContract {
 
 #[cfg(test)]
 mod test;
+
+#[cfg(test)]
+mod integration_test;

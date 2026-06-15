@@ -13,3 +13,7 @@ shared = { path = "../shared" }
 
 [dev-dependencies]
 soroban-sdk = { workspace = true, features = ["testutils"] }
+invoice-registry = { path = "../invoice-registry" }
+escrow = { path = "../escrow" }
+liquidity-pool = { path = "../liquidity-pool" }
+oracle = { path = "../oracle" }
