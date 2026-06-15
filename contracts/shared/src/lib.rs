@@ -57,3 +57,50 @@ pub struct PoolConfig {
     pub max_tenor_days: u32,
     pub max_single_buyer_exposure_pct: u32,
 }
+
+#[derive(Clone)]
+#[contracttype]
+pub struct EscrowState {
+    pub invoice_id: BytesN<32>,
+    pub buyer: Address,
+    pub investor: Address,
+    pub seller: Address,
+    pub amount: i128,
+    pub due_date: u64,
+    pub status: EscrowStatus,
+    pub created_at: u64,
+    pub settled_at: u64,
+    pub grace_period_end: u64,
+}
+
+#[derive(Clone)]
+#[contracttype]
+pub enum EscrowStatus {
+    Active,
+    Settled,
+    Defaulted,
+}
+
+#[derive(Clone)]
+#[contracttype]
+pub struct PoolState {
+    pub total_deposits: i128,
+    pub deployed_capital: i128,
+    pub pending_returns: i128,
+    pub share_price: i128,
+}
+
+#[derive(Clone)]
+#[contracttype]
+pub struct Position {
+    pub shares: i128,
+    pub deposited: i128,
+}
+
+#[derive(Clone)]
+#[contracttype]
+pub struct RiskScoreEntry {
+    pub score: u32,
+    pub timestamp: u64,
+    pub operator: Address,
+}
