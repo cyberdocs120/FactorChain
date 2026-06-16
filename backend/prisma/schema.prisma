@@ -195,3 +195,17 @@ model Webhook {
   @@index([userAddress])
   @@map("webhooks")
 }
+
+model IndexedEvent {
+  id               String   @id @default(cuid())
+  idempotencyKey   String   @unique @map("idempotency_key")
+  contractAddress  String   @map("contract_address")
+  ledgerSequence   Int      @map("ledger_sequence")
+  eventIndex       Int      @map("event_index")
+  topic            String
+  createdAt        DateTime @default(now()) @map("created_at")
+
+  @@index([idempotencyKey])
+  @@index([contractAddress, ledgerSequence, eventIndex])
+  @@map("indexed_events")
+}
