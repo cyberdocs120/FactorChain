@@ -34,6 +34,10 @@ export const AdminDashboard: React.FC = () => {
       queryClient.invalidateQueries({ queryKey: ['admin-risk-scores'] });
       toast.success("Re-score triggered successfully!");
     },
+    onError: (error: unknown) => {
+      const message = error instanceof Error ? error.message : "Failed to trigger re-score";
+      toast.error(message);
+    },
   });
 
   return (

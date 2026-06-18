@@ -35,8 +35,8 @@ export const ListingForm: React.FC = () => {
       
       toast.success("Listing created successfully!");
     } catch (error) {
-      console.error(error);
-      toast.error("Failed to create listing.");
+      const message = error instanceof Error ? error.message : "Failed to create listing";
+      toast.error(message);
     }
   };
 

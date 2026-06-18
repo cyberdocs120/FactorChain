@@ -7,17 +7,15 @@ export const useContract = (contractId: string) => {
   const invoke = useCallback(async (method: string, args: any[] = []) => {
     if (!address) throw new Error("Wallet not connected");
 
-    // This is a simplified version of what would be a much more complex
-    // process of building, simulating, and signing a Soroban transaction.
-    console.log(`Invoking ${method} on ${contractId} with args:`, args);
+    // TODO: Implement full Soroban transaction lifecycle:
+    // 1. Fetch account sequence number
+    // 2. Build Transaction with InvokeHostFunction operation
+    // 3. Simulate to estimate fees
+    // 4. Sign with Freighter wallet
+    // 5. Submit to Soroban RPC
+    // 6. Wait for confirmation
     
-    // 1. Fetch account
-    // 2. Build Transaction
-    // 3. Add Operation (InvokeHostFunction)
-    // 4. Simulate
-    // 5. Sign with Freighter
-    // 6. Submit to RPC
-    
+    // TODO: Use VITE_SOROBAN_RPC_URL and VITE_NETWORK_PASSPHRASE from env
     return { success: true, txHash: 'mock_hash' };
   }, [address, contractId]);
 

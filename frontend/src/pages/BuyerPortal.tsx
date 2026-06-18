@@ -23,17 +23,15 @@ export const BuyerPortal: React.FC = () => {
 
   const settleMutation = useMutation({
     mutationFn: async (invoiceId: string) => {
-      // Here we would call the Escrow contract's settle function
-      // const tx = await settleEscrow(invoiceId);
-      toast.success(`Settling invoice ${invoiceId}...`);
       return api.post(`/invoices/${invoiceId}/settle`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['settlements'] });
       toast.success("Invoice settled successfully!");
     },
-    onError: () => {
-      toast.error("Failed to settle invoice.");
+    onError: (error: unknown) => {
+      const message = error instanceof Error ? error.message : "Failed to settle invoice";
+      toast.error(message);
     }
   });
 

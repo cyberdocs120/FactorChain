@@ -28,9 +28,11 @@ export class InvoicesService {
 
     const docHash = createHash('sha256').update(file.buffer).digest('hex');
 
+    // TODO: Implement actual IPFS pinning via Pinata SDK.
+    // Current implementation generates a mock CID from the doc hash.
+    // Replace with: const pinata = new PinataSDK({ pinataApiKey, pinataSecret });
+    // const result = await pinata.pinFileToIPFS(file.buffer);
     const cid = `bafybei${docHash.substring(0, 44)}`;
-
-    this.logger.log(`Invoice uploaded: hash=${docHash}, size=${file.size}`);
 
     return {
       cid,

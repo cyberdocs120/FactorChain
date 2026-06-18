@@ -8,9 +8,10 @@ import { Label } from '../components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
 import { toast } from 'sonner';
 import api from '../api/client';
+import { isValidStellarAddress } from '../hooks/useWallet';
 
 const invoiceSchema = z.object({
-  buyer: z.string().min(56, "Invalid Stellar address"),
+  buyer: z.string().refine((val) => isValidStellarAddress(val), "Invalid Stellar address format"),
   amount: z.string().refine((val) => !isNaN(Number(val)) && Number(val) > 0, "Amount must be greater than 0"),
   dueDate: z.string().min(1, "Due date is required"),
   file: z.any().optional(),
@@ -45,8 +46,8 @@ export const InvoiceForm: React.FC = () => {
       
       toast.success("Invoice minted successfully on-chain!");
     } catch (error) {
-      console.error(error);
-      toast.error("Failed to mint invoice.");
+      const message = error instanceof Error ? error.message : "Failed to mint invoice";
+      toast.error(message);
     }
   };
 
