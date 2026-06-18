@@ -1,0 +1,134 @@
+name: Deploy
+
+on:
+  workflow_dispatch:
+    inputs:
+      network:
+        description: "Target network"
+        required: true
+        default: "testnet"
+        type: choice
+        options:
+          - testnet
+          - mainnet
+      deploy-contracts:
+        description: "Deploy smart contracts"
+        required: true
+        default: true
+        type: boolean
+      deploy-backend:
+        description: "Deploy backend services"
+        required: true
+        default: true
+        type: boolean
+      deploy-frontend:
+        description: "Deploy frontend"
+        required: true
+        default: true
+        type: boolean
+
+env:
+  NETWORK: ${{ github.event.inputs.network || 'testnet' }}
+
+jobs:
+  test:
+    uses: ./.github/workflows/test-contracts.yml
+    secrets: inherit
+
+  deploy-contracts:
+    needs: [test]
+    if: ${{ github.event.inputs.deploy-contracts == 'true' || github.event.inputs.deploy-contracts == '' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+
+      - name: Cache Rust dependencies
+        uses: Swatinem/rust-cache@v2
+
+      - name: Build contracts
+        run: cargo build --target wasm32-unknown-unknown --release
+
+      - name: Deploy contracts
+        run: |
+          chmod +x scripts/deploy.sh
+          ./scripts/deploy.sh --network ${{ env.NETWORK }} --account factorchain-deployer
+        env:
+          SOROBAN_RPC_URL: ${{ secrets.SOROBAN_RPC_URL }}
+          STELLAR_NETWORK_PASSPHRASE: ${{ secrets.STELLAR_NETWORK_PASSPHRASE }}
+
+      - name: Initialize contracts
+        run: |
+          chmod +x scripts/initialize.sh
+          ./scripts/initialize.sh --network ${{ env.NETWORK }}
+        env:
+          SOROBAN_RPC_URL: ${{ secrets.SOROBAN_RPC_URL }}
+
+      - name: Write deployed addresses to summary
+        run: |
+          echo "## Deployed Contracts (${{ env.NETWORK }})" >> $GITHUB_STEP_SUMMARY
+          cat .env | grep "_CONTRACT=" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+  deploy-backend:
+    needs: [deploy-contracts]
+    if: ${{ github.event.inputs.deploy-backend == 'true' || github.event.inputs.deploy-backend == '' }}
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build backend
+        run: npm run build
+
+      - name: Deploy backend (Railway)
+        run: |
+          echo "Backend build complete. Ready for Railway deployment."
+          echo "Run: railway up --service api"
+          echo "Run: railway up --service indexer"
+          echo "Run: railway up --service oracle"
+          echo "Run: railway up --service notifications"
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+
+  deploy-frontend:
+    needs: [deploy-contracts]
+    if: ${{ github.event.inputs.deploy-frontend == 'true' || github.event.inputs.deploy-frontend == '' }}
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build frontend
+        run: npm run build
+        env:
+          VITE_API_BASE_URL: ${{ secrets.VITE_API_BASE_URL }}
+          VITE_SOROBAN_RPC_URL: ${{ secrets.SOROBAN_RPC_URL }}
+          VITE_NETWORK_PASSPHRASE: ${{ secrets.STELLAR_NETWORK_PASSPHRASE }}
+
+      - name: Deploy frontend (Vercel)
+        run: npx vercel --prod --token=${{ secrets.VERCEL_TOKEN }} --yes

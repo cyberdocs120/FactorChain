@@ -1,0 +1,81 @@
+name: Test Backend
+
+on:
+  pull_request:
+    paths:
+      - "backend/**"
+      - "!backend/docker-compose.yml"
+  push:
+    branches: [main]
+    paths:
+      - "backend/**"
+      - "!backend/docker-compose.yml"
+
+jobs:
+  lint-and-test:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: factorchain
+          POSTGRES_PASSWORD: factorchain
+          POSTGRES_DB: factorchain
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready -U factorchain
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 5
+
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 5
+
+    defaults:
+      run:
+        working-directory: backend
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: backend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate Prisma client
+        run: npx prisma generate
+        env:
+          DATABASE_URL: postgresql://factorchain:factorchain@localhost:5432/factorchain
+
+      - name: Run Prisma migrations
+        run: npx prisma migrate dev --skip-generate
+        env:
+          DATABASE_URL: postgresql://factorchain:factorchain@localhost:5432/factorchain
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Unit tests
+        run: npm test
+        env:
+          DATABASE_URL: postgresql://factorchain:factorchain@localhost:5432/factorchain
+          REDIS_URL: redis://localhost:6379
+          JWT_SECRET: test-jwt-secret-for-ci-min-32-chars-long
+          STELLAR_NETWORK: testnet
+          SOROBAN_RPC_URL: https://soroban-testnet.stellar.org
+          STELLAR_NETWORK_PASSPHRASE: "Test SDF Network ; September 2015"
