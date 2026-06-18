@@ -66,7 +66,7 @@ fn test_double_financing_rejected() {
 }
 
 #[test]
-fn test_update_status_by_seller() {
+fn test_update_status_by_authorized_caller() {
     let env = Env::default();
     env.mock_all_auths();
 
@@ -74,8 +74,10 @@ fn test_update_status_by_seller() {
     let seller = Address::generate(&env);
     let buyer = Address::generate(&env);
 
-    let contract_id = env.register(InvoiceRegistry, (admin,));
+    let contract_id = env.register(InvoiceRegistry, (admin.clone(),));
     let client = InvoiceRegistryClient::new(&env, &contract_id);
+
+    client.add_authorized_caller(&contract_id);
 
     let doc_hash = make_doc_hash(&env, 1);
     env.ledger().set_timestamp(1700000000);

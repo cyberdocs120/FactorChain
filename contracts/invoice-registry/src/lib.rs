@@ -106,7 +106,10 @@ impl InvoiceRegistry {
             .get(&DataKey::Invoice(invoice_id.clone()))
             .expect("invoice not found");
 
-        invoice.seller.require_auth();
+        let caller = env.current_contract_address();
+        if !env.storage().persistent().has(&DataKey::AuthorizedCaller(caller.clone())) {
+            panic!("unauthorized caller: only authorized contracts can update status");
+        }
 
         invoice.status = new_status.clone();
 

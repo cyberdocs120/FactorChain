@@ -43,6 +43,12 @@ impl MarketplaceContract {
             panic!("deadline must be in the future");
         }
 
+        // TODO: Dutch auction price decay not yet implemented.
+        // The current implementation accepts mode = SaleMode::DutchAuction
+        // but does not apply time-based discount rate decay.
+        // Future work: implement price decay function that reduces
+        // discount_rate_bps linearly over time until deadline.
+
         let listing = Listing {
             invoice_id,
             mode,

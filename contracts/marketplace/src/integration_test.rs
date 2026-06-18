@@ -43,6 +43,10 @@ fn setup_full(
     let escrow_id = env.register(EscrowContract, ());
     let escrow_client = EscrowContractClient::new(env, &escrow_id);
 
+    invoice_client.add_authorized_caller(&invoice_registry_id);
+    invoice_client.add_authorized_caller(&marketplace_id);
+    invoice_client.add_authorized_caller(&escrow_id);
+
     let pool_config = PoolConfig {
         max_invoice_size: 100_000_000_000,
         min_discount_rate_bps: 100,
